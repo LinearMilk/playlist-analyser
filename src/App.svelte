@@ -1,47 +1,89 @@
 <script>
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { fetchPlaylist } from './lib/api.js';
+
+  let playlistUrl = $state('');
+  let accessToken = $state('your_spotify_access_token_here');
+  let playlistData = $state(null);
+  let isLoading = $state(false);
+  let error = $state(null);
+
+  function extractPlaylistId(url) {
+      const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
+      return match ? match[1] : null;
+  }
+
+  async function loadPlaylist() {
+      try {
+          error = null;
+          isLoading = true;
+          
+          const playlistId = extractPlaylistId(playlistUrl);
+          if (!playlistId) throw new Error("Invalid Spotify playlist URL");
+          
+          playlistData = await fetchPlaylist(playlistId, accessToken);
+      } catch (err) {
+          error = err.message;
+          playlistData = null;
+      } finally {
+          isLoading = false;
+      }
+  }
 </script>
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+<div class="container">
+  <h1>Spotify Playlist Analyzer</h1>
 
-  <div class="card">
-    <Counter />
+  <div class="input-section">
+      <input type="text" bind:value={playlistUrl} placeholder="Enter Spotify playlist URL" />
+      <!-- Updated to onClick -->
+      <button onClick={loadPlaylist}>Fetch Data</button>
   </div>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
+  {#if error}
+      <p class="error">{error}</p>
+  {:else if isLoading}
+      <p>Loading playlist data...</p>
+  {:else if playlistData}
+      <div class="playlist-info">
+          <h2>{playlistData.name}</h2>
+          <p>By: {playlistData.owner.display_name}</p>
+          <p>Total Tracks: {playlistData.tracks.total}</p>
 
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
+          <ul>
+              {#each playlistData.tracks.items as item}
+                  <li>{item.track.name} - {item.track.artists[0].name}</li>
+              {/each}
+          </ul>
+      </div>
+  {:else}
+      <p>Enter a playlist URL and click Fetch Data.</p>
+  {/if}
+</div>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
+  .container {
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
   }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
+  .input-section {
+      margin: 20px 0;
   }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
+  input {
+      padding: 10px;
+      width: 60%;
+      margin-right: 10px;
   }
-  .read-the-docs {
-    color: #888;
+  button {
+      padding: 10px 15px;
+      cursor: pointer;
+  }
+  .playlist-info {
+      margin-top: 20px;
+      text-align: left;
+  }
+  .error {
+      color: red;
+      font-weight: bold;
   }
 </style>
