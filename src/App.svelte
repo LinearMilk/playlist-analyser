@@ -40,17 +40,17 @@
   }
 
   $effect(async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get("code");
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
 
-      if (code && !accessToken) {
-          accessToken = await fetchAccessToken(code);
-          if (accessToken) {
-              localStorage.setItem("spotify_access_token", accessToken);
-              window.history.replaceState({}, document.title, "/"); // Clean URL
-          }
-      }
-  });
+        if (code && !accessToken) {
+            accessToken = await fetchAccessToken(code);
+            if (accessToken) {
+                localStorage.setItem("spotify_access_token", accessToken);
+                window.history.replaceState({}, document.title, "/"); // Clean URL
+            }
+        }
+    });
 </script>
 
 <div class="container">
