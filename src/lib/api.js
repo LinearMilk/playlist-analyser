@@ -54,3 +54,18 @@ export function loginWithSpotify() {
 
     window.location.href = authUrl;
 }
+
+export async function fetchUserPlaylists(accessToken) {
+    try {
+        const response = await fetch("https://api.spotify.com/v1/me/playlists", {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch user playlists");
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching user playlists:", error);
+        return null;
+    }
+}
